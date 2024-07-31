@@ -7,24 +7,32 @@ public class MovementController : MonoBehaviour
 {
     [SerializeField] public Animator anim;
     NavMeshAgent agent;
-    public float charSpeed = 5f;
+    public float charMoveSpeed = 5f;
+    public float charRunSpeed = 10f;
+    public float jumpForce = 5f;
     public LayerMask groundLayer;
     public bool isMoving;
+    public bool isRunning;
+    public bool isGrounded;
     public Vector3 movement;
+    public GameObject charLogo;
+    private Rigidbody rb;
 
-    // Start is called before the first frame update
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
-        agent.speed = charSpeed;
+        rb = GetComponent<Rigidbody>();
+        agent.speed = charMoveSpeed;
         isMoving = false;
+        isRunning = false;
         anim.SetBool("isMoving", false);
-
+        anim.SetBool("isRunning", false);
+        GameObject logo = Instantiate(charLogo, transform);
+        logo.transform.localPosition = new Vector3(0, 0, 0);
         Cursor.lockState = CursorLockMode.Confined;
         Cursor.visible = true;
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (GameManager.Instance.chatBox.isFocused)
@@ -32,28 +40,25 @@ public class MovementController : MonoBehaviour
             StopMovement();
             return;
         }
-
         InputMovement();
         MouseClickMovement();
         UpdateMovementState();
+        HandleJump();
+        HandleSprint();
     }
 
-    // Object movement with W, A, S, D
     void InputMovement()
     {
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
-        Vector3 movement = new Vector3(horizontal, 0, vertical).normalized;
-
+        movement = new Vector3(horizontal, 0, vertical).normalized;
         isMoving = (horizontal != 0 || vertical != 0);
-
         anim.SetBool("isMoving", isMoving);
-
         if (isMoving)
         {
             agent.ResetPath();
-            agent.Move(movement * charSpeed * Time.deltaTime);
-
+            float currentSpeed = isRunning ? charRunSpeed : charMoveSpeed;
+            agent.Move(movement * currentSpeed * Time.deltaTime);
             if (movement != Vector3.zero)
             {
                 Quaternion targetRotation = Quaternion.LookRotation(movement);
@@ -62,7 +67,6 @@ public class MovementController : MonoBehaviour
         }
     }
 
-    // Object movement with left-mouse click
     void MouseClickMovement()
     {
         if (Input.GetMouseButtonDown(0))
@@ -85,6 +89,44 @@ public class MovementController : MonoBehaviour
     {
         agent.ResetPath();
         isMoving = false;
+        isRunning = false;
         anim.SetBool("isMoving", false);
+    }
+
+    void HandleJump()
+    {
+        isGrounded = Physics.Raycast(transform.position, Vector3.down, 1f, groundLayer);
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            Debug.Log("Space key pressed");
+
+            if (isGrounded)
+            {
+                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+                anim.SetBool("isJumping", true);
+                Debug.Log("Character is Jumping => " + Vector3.up * jumpForce);
+            }
+            else
+            {
+                Debug.Log("Character is not grounded");
+            }
+        }
+    }
+
+    void HandleSprint()
+    {
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            isRunning = true;
+            agent.speed = charRunSpeed;
+            anim.SetBool("isRunning", isRunning);
+        }
+        else if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            isRunning = false;
+            agent.speed = charMoveSpeed;
+            anim.SetBool("isRunning", isRunning);
+        }
     }
 }

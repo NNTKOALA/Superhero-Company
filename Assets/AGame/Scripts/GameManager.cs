@@ -25,7 +25,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Character UI")]
     public TMP_Text characterText;
-    public GameObject characterTextObject;
+    public GameObject chatBubble;
     public float messageDisplayDuration = 5f;
 
     [Header("Scroll Settings")]
@@ -82,12 +82,23 @@ public class GameManager : MonoBehaviour
                 SendMessageToChat(username + ": " + chatBox.text, Message.MessageType.playerMessage);
                 DisplayMessageAboveCharacter(chatBox.text);
                 chatBox.text = "";
+                ShowChatUI();
             }
         }
 
-        if (Input.GetMouseButtonDown(0) && !IsPointerOverUIElement())
+        if (Input.GetMouseButtonDown(0))
         {
-            HideChatUI();
+            if (IsPointerOverUIElement())
+            {
+                if (!isChatVisible && chatBox.isFocused)
+                {
+                    ShowChatUI();
+                }
+            }
+            else
+            {
+                HideChatUI();
+            }
         }
 
         if (isChatVisible)
@@ -199,10 +210,10 @@ public class GameManager : MonoBehaviour
 
     private void DisplayMessageAboveCharacter(string message)
     {
-        if (characterText != null && characterTextObject != null)
+        if (characterText != null && chatBubble != null)
         {
             characterText.text = message;
-            characterTextObject.SetActive(true);
+            chatBubble.SetActive(true);
 
             if (clearCharacterTextCoroutine != null)
             {
@@ -215,18 +226,18 @@ public class GameManager : MonoBehaviour
 
     private void UpdateCharacterTextPosition()
     {
-        if (player != null && characterTextObject != null)
+        if (player != null && chatBubble != null)
         {
             Vector3 screenPos = Camera.main.WorldToScreenPoint(player.transform.position);
-            characterTextObject.transform.position = screenPos + new Vector3(0, 400, 0);
+            chatBubble.transform.position = screenPos + new Vector3(0, 500, 0);
         }
     }
 
     private void HideCharacterText()
     {
-        if (characterTextObject != null)
+        if (chatBubble != null)
         {
-            characterTextObject.SetActive(false);
+            chatBubble.SetActive(false);
         }
     }
 
