@@ -9,26 +9,23 @@ public class MovementController : MonoBehaviour
     NavMeshAgent agent;
     public float charMoveSpeed = 5f;
     public float charRunSpeed = 10f;
-    public float jumpForce = 5f;
     public LayerMask groundLayer;
     public bool isMoving;
     public bool isRunning;
-    public bool isGrounded;
     public Vector3 movement;
     public GameObject charLogo;
-    private Rigidbody rb;
 
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
-        rb = GetComponent<Rigidbody>();
         agent.speed = charMoveSpeed;
         isMoving = false;
         isRunning = false;
         anim.SetBool("isMoving", false);
         anim.SetBool("isRunning", false);
         GameObject logo = Instantiate(charLogo, transform);
-        logo.transform.localPosition = new Vector3(0, 0, 0);
+        logo.transform.localPosition = new Vector3(0, 1.8f, 0);
+        logo.AddComponent<FaceCamera>();
         Cursor.lockState = CursorLockMode.Confined;
         Cursor.visible = true;
     }
@@ -43,7 +40,6 @@ public class MovementController : MonoBehaviour
         InputMovement();
         MouseClickMovement();
         UpdateMovementState();
-        HandleJump();
         HandleSprint();
     }
 
@@ -69,7 +65,7 @@ public class MovementController : MonoBehaviour
 
     void MouseClickMovement()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (InputManager.Instance.IsMoveToMouse())
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity, groundLayer))
@@ -93,36 +89,15 @@ public class MovementController : MonoBehaviour
         anim.SetBool("isMoving", false);
     }
 
-    void HandleJump()
-    {
-        isGrounded = Physics.Raycast(transform.position, Vector3.down, 1f, groundLayer);
-
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Debug.Log("Space key pressed");
-
-            if (isGrounded)
-            {
-                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-                anim.SetBool("isJumping", true);
-                Debug.Log("Character is Jumping => " + Vector3.up * jumpForce);
-            }
-            else
-            {
-                Debug.Log("Character is not grounded");
-            }
-        }
-    }
-
     void HandleSprint()
     {
-        if (Input.GetKeyDown(KeyCode.LeftShift))
+        if (InputManager.Instance.IsRunning())
         {
             isRunning = true;
             agent.speed = charRunSpeed;
             anim.SetBool("isRunning", isRunning);
         }
-        else if (Input.GetKeyUp(KeyCode.LeftShift))
+        else
         {
             isRunning = false;
             agent.speed = charMoveSpeed;
