@@ -116,7 +116,7 @@ public class GameManager : MonoBehaviour
 
     void HandleFastScrolling()
     {
-        if (chatScrollRect != null && Input.GetKey(KeyCode.LeftShift))
+        if (chatScrollRect != null)
         {
             float scrollDelta = Input.GetAxis("Mouse ScrollWheel");
             if (scrollDelta != 0)

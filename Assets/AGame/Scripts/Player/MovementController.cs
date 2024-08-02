@@ -91,7 +91,7 @@ public class MovementController : MonoBehaviour
 
     void HandleSprint()
     {
-        if (InputManager.Instance.IsRunning())
+        if (InputManager.Instance.IsRunning() && isMoving == true)
         {
             isRunning = true;
             agent.speed = charRunSpeed;
